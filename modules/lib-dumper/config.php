@@ -23,10 +23,10 @@ return [
                 'type' => 'psr4',
                 'base' => 'modules/lib-dumper/third-party/symfony-var-dumper'
             ],
-            'Symfony\Polyfill\Mbstring' => [
-                'type' => 'psr4',
-                'base' => 'modules/lib-dumper/third-party/symfony-polyfill-mbstring'
-            ],
+            // 'Symfony\Polyfill\Mbstring' => [
+            //     'type' => 'psr4',
+            //     'base' => 'modules/lib-dumper/third-party/symfony-polyfill-mbstring'
+            // ],
         ],
         'files' => [
             'modules/lib-dumper/third-party/symfony-var-dumper/Resources/functions/dump.php' => TRUE
