@@ -2,7 +2,7 @@
 
 return [
     '__name' => 'lib-dumper',
-    '__version' => '0.0.2',
+    '__version' => '0.0.3',
     '__git' => 'git@github.com:getmim/lib-dumper.git',
     '__license' => 'MIT',
     '__author' => [
@@ -23,10 +23,10 @@ return [
                 'type' => 'psr4',
                 'base' => 'modules/lib-dumper/third-party/symfony-var-dumper'
             ],
-            // 'Symfony\Polyfill\Mbstring' => [
-            //     'type' => 'psr4',
-            //     'base' => 'modules/lib-dumper/third-party/symfony-polyfill-mbstring'
-            // ],
+            'Symfony\Polyfill\Mbstring' => [
+                'type' => 'psr4',
+                'base' => 'modules/lib-dumper/third-party/symfony-polyfill-mbstring'
+            ],
         ],
         'files' => [
             'modules/lib-dumper/third-party/symfony-var-dumper/Resources/functions/dump.php' => TRUE
