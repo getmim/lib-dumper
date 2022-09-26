@@ -1,20 +1,7 @@
 <?php
 
-abstract class AbstractTwigTemplate extends Twig\Template
-{
-    private function createError()
-    {
-        return new \RuntimeException('Manually triggered error.');
-    }
-
-    public function provideError()
-    {
-        return $this->createError();
-    }
-}
-
 /* foo.twig */
-class __TwigTemplate_VarDumperFixture_u75a09 extends AbstractTwigTemplate
+class __TwigTemplate_VarDumperFixture_u75a09 extends Twig\Template
 {
     private $path;
 
@@ -41,7 +28,7 @@ class __TwigTemplate_VarDumperFixture_u75a09 extends AbstractTwigTemplate
 
     public function getDebugInfo()
     {
-        return [33 => 1, 34 => 2];
+        return [20 => 1, 21 => 2];
     }
 
     public function getSourceContext()

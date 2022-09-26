@@ -164,11 +164,11 @@ EOTXT
             , $c
         );
 
-        $c = eval('return new class implements \Countable { private $foo = "foo"; public function count(): int { return 0; } };');
+        $c = eval('return new class { private $foo = "foo"; };');
 
         $this->assertDumpMatchesFormat(
             <<<'EOTXT'
-Countable@anonymous {
+@anonymous {
   -foo: "foo"
 }
 EOTXT

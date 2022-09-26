@@ -2,8 +2,7 @@
 
 namespace Symfony\Component\VarDumper\Tests\Fixture;
 
-if (!class_exists(\Symfony\Component\VarDumper\Tests\Fixture\DumbFoo::class)) {
-    #[\AllowDynamicProperties]
+if (!class_exists('Symfony\Component\VarDumper\Tests\Fixture\DumbFoo')) {
     class DumbFoo
     {
         public $foo = 'foo';
@@ -18,7 +17,7 @@ $g = fopen(__FILE__, 'r');
 $var = [
     'number' => 1, null,
     'const' => 1.1, true, false, NAN, INF, -INF, PHP_INT_MAX,
-    'str' => "déjà\n", "\xE9\x01test\t\ning",
+    'str' => "déjà\n", "\xE9\x00test\t\ning",
     '[]' => [],
     'res' => $g,
     'obj' => $foo,

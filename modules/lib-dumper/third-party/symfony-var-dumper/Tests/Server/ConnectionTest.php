@@ -24,10 +24,6 @@ class ConnectionTest extends TestCase
 
     public function testDump()
     {
-        if ('True' === getenv('APPVEYOR')) {
-            $this->markTestSkipped('Skip transient test on AppVeyor');
-        }
-
         $cloner = new VarCloner();
         $data = $cloner->cloneVar('foo');
         $connection = new Connection(self::VAR_DUMPER_SERVER, [
@@ -66,7 +62,7 @@ class ConnectionTest extends TestCase
 %d
 
 DUMP
-            , $dumped);
+        , $dumped);
     }
 
     public function testNoServer()
@@ -85,6 +81,7 @@ DUMP
             'COMPONENT_ROOT' => __DIR__.'/../../',
             'VAR_DUMPER_SERVER' => self::VAR_DUMPER_SERVER,
         ]);
+        $process->inheritEnvironmentVariables(true);
 
         return $process->setTimeout(9);
     }

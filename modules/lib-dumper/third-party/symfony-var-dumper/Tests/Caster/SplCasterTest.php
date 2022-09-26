@@ -50,12 +50,12 @@ SplFileInfo {
 %A}
 EOTXT
             ],
-            ['http://example.com/about', <<<'EOTXT'
+            ['https://example.com/about', <<<'EOTXT'
 SplFileInfo {
-%Apath: "http://example.com"
+%Apath: "https://example.com"
   filename: "about"
   basename: "about"
-  pathname: "http://example.com/about"
+  pathname: "https://example.com/about"
   extension: ""
   realPath: false
 %A}
@@ -166,20 +166,18 @@ EOTXT;
 
     public function testCastArrayObject()
     {
-        $var = new
-            #[\AllowDynamicProperties]
-            class([123]) extends \ArrayObject {};
+        $var = new \ArrayObject([123]);
         $var->foo = 234;
 
         $expected = <<<EOTXT
-ArrayObject@anonymous {
+ArrayObject {
   +"foo": 234
-  -storage: array:1 [
-    0 => 123
-  ]
   flag::STD_PROP_LIST: false
   flag::ARRAY_AS_PROPS: false
   iteratorClass: "ArrayIterator"
+  storage: array:1 [
+    0 => 123
+  ]
 }
 EOTXT;
         $this->assertDumpEquals($expected, $var);
@@ -192,11 +190,11 @@ EOTXT;
         $expected = <<<EOTXT
 Symfony\Component\VarDumper\Tests\Caster\MyArrayIterator {
   -foo: 123
-  -storage: array:1 [
-    0 => 234
-  ]
   flag::STD_PROP_LIST: false
   flag::ARRAY_AS_PROPS: false
+  storage: array:1 [
+    0 => 234
+  ]
 }
 EOTXT;
         $this->assertDumpEquals($expected, $var);

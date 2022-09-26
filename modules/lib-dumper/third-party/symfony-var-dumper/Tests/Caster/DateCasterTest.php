@@ -16,7 +16,6 @@ use Symfony\Component\VarDumper\Caster\Caster;
 use Symfony\Component\VarDumper\Caster\DateCaster;
 use Symfony\Component\VarDumper\Cloner\Stub;
 use Symfony\Component\VarDumper\Test\VarDumperTestTrait;
-use Symfony\Component\VarDumper\Tests\Fixtures\DateTimeChild;
 
 /**
  * @author Dany Maillard <danymaillard93b@gmail.com>
@@ -48,7 +47,7 @@ EODUMP;
     {
         $stub = new Stub();
         $date = new \DateTime($time, new \DateTimeZone($timezone));
-        $cast = DateCaster::castDateTime($date, Caster::castObject($date, \DateTime::class), $stub, false, 0);
+        $cast = DateCaster::castDateTime($date, ['foo' => 'bar'], $stub, false, 0);
 
         $xDump = <<<EODUMP
 array:1 [
@@ -90,45 +89,15 @@ EODUMP;
         ];
     }
 
-    public function testCastDateTimeWithAdditionalChildProperty()
-    {
-        $stub = new Stub();
-        $date = new DateTimeChild('2020-02-13 00:00:00.123456', new \DateTimeZone('Europe/Paris'));
-        $objectCast = Caster::castObject($date, DateTimeChild::class);
-        $dateCast = DateCaster::castDateTime($date, $objectCast, $stub, false, 0);
-
-        $xDate = '2020-02-13 00:00:00.123456 Europe/Paris (+01:00)';
-        $xInfo = 'Thursday, February 13, 2020%Afrom now';
-        $xDump = <<<EODUMP
-array:2 [
-  "\\x00Symfony\Component\VarDumper\Tests\Fixtures\DateTimeChild\\x00addedProperty" => "foo"
-  "\\x00~\\x00date" => $xDate
-]
-EODUMP;
-
-        $this->assertDumpEquals($xDump, $dateCast);
-
-        $xDump = <<<EODUMP
-Symfony\Component\VarDumper\Caster\ConstStub {
-  +type: 1
-  +class: "$xDate"
-  +value: "%A$xInfo%A"
-  +cut: 0
-  +handle: 0
-  +refCount: 0
-  +position: 0
-  +attr: []
-}
-EODUMP;
-
-        $this->assertDumpMatchesFormat($xDump, $dateCast["\0~\0date"]);
-    }
-
     /**
      * @dataProvider provideIntervals
      */
     public function testDumpInterval($intervalSpec, $ms, $invert, $expected)
     {
+        if ($ms && \PHP_VERSION_ID >= 70200 && version_compare(PHP_VERSION, '7.2.0rc3', '<=')) {
+            $this->markTestSkipped('Skipped on 7.2 before rc4 because of php bug #75354.');
+        }
+
         $interval = $this->createInterval($intervalSpec, $ms, $invert);
 
         $xDump = <<<EODUMP
@@ -145,6 +114,10 @@ EODUMP;
      */
     public function testDumpIntervalExcludingVerbosity($intervalSpec, $ms, $invert, $expected)
     {
+        if ($ms && \PHP_VERSION_ID >= 70200 && version_compare(PHP_VERSION, '7.2.0rc3', '<=')) {
+            $this->markTestSkipped('Skipped on 7.2 before rc4 because of php bug #75354.');
+        }
+
         $interval = $this->createInterval($intervalSpec, $ms, $invert);
 
         $xDump = <<<EODUMP
@@ -161,6 +134,10 @@ EODUMP;
      */
     public function testCastInterval($intervalSpec, $ms, $invert, $xInterval, $xSeconds)
     {
+        if ($ms && \PHP_VERSION_ID >= 70200 && version_compare(PHP_VERSION, '7.2.0rc3', '<=')) {
+            $this->markTestSkipped('Skipped on 7.2 before rc4 because of php bug #75354.');
+        }
+
         $interval = $this->createInterval($intervalSpec, $ms, $invert);
         $stub = new Stub();
 
@@ -341,7 +318,7 @@ EODUMP;
      */
     public function testCastPeriod($start, $interval, $end, $options, $xPeriod, $xDates)
     {
-        $p = new \DatePeriod(new \DateTime($start, new \DateTimeZone('UTC')), new \DateInterval($interval), \is_int($end) ? $end : new \DateTime($end, new \DateTimeZone('UTC')), $options);
+        $p = new \DatePeriod(new \DateTime($start), new \DateInterval($interval), \is_int($end) ? $end : new \DateTime($end), $options);
         $stub = new Stub();
 
         $cast = DateCaster::castPeriod($p, [], $stub, false, 0);
@@ -373,27 +350,31 @@ EODUMP;
     public function providePeriods()
     {
         $periods = [
-            ['2017-01-01', 'P1D', '2017-01-03', 0, 'every + 1d, from [2017-01-01 00:00:00.0 to 2017-01-03 00:00:00.0[', '1) 2017-01-01%a2) 2017-01-02'],
-            ['2017-01-01', 'P1D', 1, 0, 'every + 1d, from [2017-01-01 00:00:00.0 recurring 2 time/s', '1) 2017-01-01%a2) 2017-01-02'],
+            ['2017-01-01', 'P1D', '2017-01-03', 0, 'every + 1d, from 2017-01-01 00:00:00.0 (included) to 2017-01-03 00:00:00.0', '1) 2017-01-01%a2) 2017-01-02'],
+            ['2017-01-01', 'P1D', 1, 0, 'every + 1d, from 2017-01-01 00:00:00.0 (included) recurring 2 time/s', '1) 2017-01-01%a2) 2017-01-02'],
 
-            ['2017-01-01', 'P1D', '2017-01-04', 0, 'every + 1d, from [2017-01-01 00:00:00.0 to 2017-01-04 00:00:00.0[', '1) 2017-01-01%a2) 2017-01-02%a3) 2017-01-03'],
-            ['2017-01-01', 'P1D', 2, 0, 'every + 1d, from [2017-01-01 00:00:00.0 recurring 3 time/s', '1) 2017-01-01%a2) 2017-01-02%a3) 2017-01-03'],
+            ['2017-01-01', 'P1D', '2017-01-04', 0, 'every + 1d, from 2017-01-01 00:00:00.0 (included) to 2017-01-04 00:00:00.0', '1) 2017-01-01%a2) 2017-01-02%a3) 2017-01-03'],
+            ['2017-01-01', 'P1D', 2, 0, 'every + 1d, from 2017-01-01 00:00:00.0 (included) recurring 3 time/s', '1) 2017-01-01%a2) 2017-01-02%a3) 2017-01-03'],
 
-            ['2017-01-01', 'P1D', '2017-01-05', 0, 'every + 1d, from [2017-01-01 00:00:00.0 to 2017-01-05 00:00:00.0[', '1) 2017-01-01%a2) 2017-01-02%a1 more'],
-            ['2017-01-01', 'P1D', 3, 0, 'every + 1d, from [2017-01-01 00:00:00.0 recurring 4 time/s', '1) 2017-01-01%a2) 2017-01-02%a3) 2017-01-03%a1 more'],
+            ['2017-01-01', 'P1D', '2017-01-05', 0, 'every + 1d, from 2017-01-01 00:00:00.0 (included) to 2017-01-05 00:00:00.0', '1) 2017-01-01%a2) 2017-01-02%a1 more'],
+            ['2017-01-01', 'P1D', 3, 0, 'every + 1d, from 2017-01-01 00:00:00.0 (included) recurring 4 time/s', '1) 2017-01-01%a2) 2017-01-02%a3) 2017-01-03%a1 more'],
 
-            ['2017-01-01', 'P1D', '2017-01-21', 0, 'every + 1d, from [2017-01-01 00:00:00.0 to 2017-01-21 00:00:00.0[', '1) 2017-01-01%a17 more'],
-            ['2017-01-01', 'P1D', 19, 0, 'every + 1d, from [2017-01-01 00:00:00.0 recurring 20 time/s', '1) 2017-01-01%a17 more'],
+            ['2017-01-01', 'P1D', '2017-01-21', 0, 'every + 1d, from 2017-01-01 00:00:00.0 (included) to 2017-01-21 00:00:00.0', '1) 2017-01-01%a17 more'],
+            ['2017-01-01', 'P1D', 19, 0, 'every + 1d, from 2017-01-01 00:00:00.0 (included) recurring 20 time/s', '1) 2017-01-01%a17 more'],
 
-            ['2017-01-01 01:00:00', 'P1D', '2017-01-03 01:00:00', 0, 'every + 1d, from [2017-01-01 01:00:00.0 to 2017-01-03 01:00:00.0[', '1) 2017-01-01 01:00:00.0%a2) 2017-01-02 01:00:00.0'],
-            ['2017-01-01 01:00:00', 'P1D', 1, 0, 'every + 1d, from [2017-01-01 01:00:00.0 recurring 2 time/s', '1) 2017-01-01 01:00:00.0%a2) 2017-01-02 01:00:00.0'],
+            ['2017-01-01 01:00:00', 'P1D', '2017-01-03 01:00:00', 0, 'every + 1d, from 2017-01-01 01:00:00.0 (included) to 2017-01-03 01:00:00.0', '1) 2017-01-01 01:00:00.0%a2) 2017-01-02 01:00:00.0'],
+            ['2017-01-01 01:00:00', 'P1D', 1, 0, 'every + 1d, from 2017-01-01 01:00:00.0 (included) recurring 2 time/s', '1) 2017-01-01 01:00:00.0%a2) 2017-01-02 01:00:00.0'],
 
-            ['2017-01-01', 'P1DT1H', '2017-01-03', 0, 'every + 1d 01:00:00.0, from [2017-01-01 00:00:00.0 to 2017-01-03 00:00:00.0[', '1) 2017-01-01 00:00:00.0%a2) 2017-01-02 01:00:00.0'],
-            ['2017-01-01', 'P1DT1H', 1, 0, 'every + 1d 01:00:00.0, from [2017-01-01 00:00:00.0 recurring 2 time/s', '1) 2017-01-01 00:00:00.0%a2) 2017-01-02 01:00:00.0'],
+            ['2017-01-01', 'P1DT1H', '2017-01-03', 0, 'every + 1d 01:00:00.0, from 2017-01-01 00:00:00.0 (included) to 2017-01-03 00:00:00.0', '1) 2017-01-01 00:00:00.0%a2) 2017-01-02 01:00:00.0'],
+            ['2017-01-01', 'P1DT1H', 1, 0, 'every + 1d 01:00:00.0, from 2017-01-01 00:00:00.0 (included) recurring 2 time/s', '1) 2017-01-01 00:00:00.0%a2) 2017-01-02 01:00:00.0'],
 
-            ['2017-01-01', 'P1D', '2017-01-04', \DatePeriod::EXCLUDE_START_DATE, 'every + 1d, from ]2017-01-01 00:00:00.0 to 2017-01-04 00:00:00.0[', '1) 2017-01-02%a2) 2017-01-03'],
-            ['2017-01-01', 'P1D', 2, \DatePeriod::EXCLUDE_START_DATE, 'every + 1d, from ]2017-01-01 00:00:00.0 recurring 2 time/s', '1) 2017-01-02%a2) 2017-01-03'],
+            ['2017-01-01', 'P1D', '2017-01-04', \DatePeriod::EXCLUDE_START_DATE, 'every + 1d, from 2017-01-01 00:00:00.0 (excluded) to 2017-01-04 00:00:00.0', '1) 2017-01-02%a2) 2017-01-03'],
+            ['2017-01-01', 'P1D', 2, \DatePeriod::EXCLUDE_START_DATE, 'every + 1d, from 2017-01-01 00:00:00.0 (excluded) recurring 2 time/s', '1) 2017-01-02%a2) 2017-01-03'],
         ];
+
+        if (\PHP_VERSION_ID < 70107) {
+            array_walk($periods, function (&$i) { $i[5] = ''; });
+        }
 
         return $periods;
     }

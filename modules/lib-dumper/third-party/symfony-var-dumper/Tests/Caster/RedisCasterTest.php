@@ -17,7 +17,6 @@ use Symfony\Component\VarDumper\Test\VarDumperTestTrait;
 /**
  * @author Nicolas Grekas <p@tchwork.com>
  * @requires extension redis
- * @group integration
  */
 class RedisCasterTest extends TestCase
 {
@@ -38,19 +37,17 @@ EODUMP;
 
     public function testConnected()
     {
-        $redisHost = explode(':', getenv('REDIS_HOST')) + [1 => 6379];
         $redis = new \Redis();
-        try {
-            $redis->connect(...$redisHost);
-        } catch (\Exception $e) {
-            self::markTestSkipped($e->getMessage());
+        if (!@$redis->connect('127.0.0.1')) {
+            $e = error_get_last();
+            self::markTestSkipped($e['message']);
         }
 
-        $xCast = <<<EODUMP
+        $xCast = <<<'EODUMP'
 Redis {%A
   isConnected: true
-  host: "{$redisHost[0]}"
-  port: {$redisHost[1]}
+  host: "127.0.0.1"
+  port: 6379
   auth: null
   mode: ATOMIC
   dbNum: 0
